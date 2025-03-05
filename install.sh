@@ -248,7 +248,7 @@ install_slowdns() {
     if [ -f /usr/bin/slowdns ]; then
         rm /usr/bin/slowdns
     fi
-    wget -O /usr/bin/slowdns https://raw.githubusercontent.com/Execc/udpgw/main/slowdns || { print_error "Failed to download SlowDNS"; exit 1; }
+    wget -O /usr/bin/slowdns https://raw.githubusercontent.com/scriptvpskita/okdeinekejsksidjndv1/main/slowdns || { print_error "Failed to download SlowDNS"; exit 1; }
     chmod +x /usr/bin/slowdns
 }
 
