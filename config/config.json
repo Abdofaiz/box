@@ -1,44 +1,39 @@
 {
-    "telegram_bot_token": "",
+    "telegram_bot_token": "your-bot-token",
     "admin_ids": [],
-    "ssh_port": 443,
+    "ssh_port": 22,
     "xray_port": 443,
-    "domain": "",
+    "domain": "your-domain.com",
     "block_torrent": true,
     "block_scanner": true,
     "max_login_attempts": 3,
     "services": {
         "ssh": {
             "enabled": true,
-            "protocols": ["openssh", "dropbear", "squid", "udpgw", "ws_http", "ws_https", "udp", "slowdns"],
-            "ovpn": {
-                "udp": true,
-                "tcp": true,
-                "ws_http": true
+            "protocols": {
+                "openssh": { "enabled": true },
+                "dropbear": { "enabled": false },
+                "squid": { "enabled": false },
+                "udpgw": { "enabled": false },
+                "slowdns": { "enabled": false },
+                "websocket": { "enabled": false }
             }
         },
         "l2tp": {
-            "enabled": true
+            "enabled": false
         },
         "xray": {
             "enabled": true,
             "protocols": {
-                "vmess": {
-                    "ws": true,
-                    "grpc": true,
-                    "tcp_http": true
-                },
-                "vless": {
-                    "ws": true,
-                    "grpc": true,
-                    "xtls": true
-                },
-                "trojan": {
-                    "ws": true,
-                    "grpc": true,
-                    "tcp": true
-                }
+                "vmess": { "enabled": true },
+                "vless": { "enabled": false },
+                "trojan": { "enabled": false }
             }
+        },
+        "ovpn": {
+            "enabled": false,
+            "port": 1194,
+            "protocol": "udp"
         }
     },
     "security": {
