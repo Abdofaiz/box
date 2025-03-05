@@ -154,8 +154,26 @@ install_udpgw() {
     if [ -f /usr/bin/udpgw ]; then
         rm /usr/bin/udpgw
     fi
-    wget -O /usr/bin/udpgw https://raw.githubusercontent.com/boxvps/udpgw/master/udpgw || { print_error "Failed to download UDPGW"; exit 1; }
+    
+    # Try multiple sources for UDPGW
+    print_info "Downloading UDPGW..."
+    
+    # Try first source
+    wget -O /usr/bin/udpgw https://raw.githubusercontent.com/Execc/udpgw/master/udpgw || {
+        print_warn "Failed to download from first source, trying alternative..."
+        # Try second source
+        wget -O /usr/bin/udpgw https://raw.githubusercontent.com/Execc/udpgw/main/udpgw || {
+            print_warn "Failed to download from second source, trying alternative..."
+            # Try third source
+            wget -O /usr/bin/udpgw https://raw.githubusercontent.com/Execc/udpgw/master/udpgw-64 || {
+                print_error "Failed to download UDPGW from all sources"
+                exit 1
+            }
+        }
+    }
+    
     chmod +x /usr/bin/udpgw
+    print_info "UDPGW installed successfully"
 }
 
 # Install SlowDNS
