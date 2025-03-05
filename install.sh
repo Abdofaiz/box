@@ -126,6 +126,8 @@ install_packages() {
         python3 \
         python3-pip \
         python3-venv \
+        python3-openssl \
+        python3-cryptography \
         curl \
         wget \
         git \
@@ -134,11 +136,35 @@ install_packages() {
     
     # Install Python packages
     print_step "Installing Python dependencies..."
+    
+    # First, upgrade pip and install wheel
+    pip3 install --upgrade pip wheel setuptools || { print_error "Failed to upgrade pip"; exit 1; }
+    
+    # Install cryptography first
+    pip3 install cryptography==41.0.7 || { print_error "Failed to install cryptography"; exit 1; }
+    
+    # Install other dependencies
     if [ -f "/etc/boxvps/requirements.txt" ]; then
+        # Remove cryptography from requirements if it exists
+        sed -i '/cryptography/d' /etc/boxvps/requirements.txt
         pip3 install -r /etc/boxvps/requirements.txt || { print_error "Failed to install Python dependencies"; exit 1; }
     else
         print_warn "requirements.txt not found. Installing default dependencies..."
-        pip3 install fastapi uvicorn python-telegram-bot python-dotenv requests pydantic cryptography python-jose passlib python-multipart aiohttp asyncio psutil netifaces python-iptables || { print_error "Failed to install default Python dependencies"; exit 1; }
+        pip3 install \
+            fastapi==0.104.1 \
+            uvicorn==0.24.0 \
+            python-telegram-bot==20.7 \
+            python-dotenv==1.0.0 \
+            requests==2.31.0 \
+            pydantic==2.5.2 \
+            python-jose==3.3.0 \
+            passlib==1.7.4 \
+            python-multipart==0.0.6 \
+            aiohttp==3.9.1 \
+            asyncio==3.4.3 \
+            psutil==5.9.6 \
+            netifaces==0.11.0 \
+            python-iptables==1.0.0 || { print_error "Failed to install default Python dependencies"; exit 1; }
     fi
 }
 
