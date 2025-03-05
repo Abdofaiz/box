@@ -219,15 +219,37 @@ install_udpgw() {
     print_info "Downloading UDPGW..."
     
     # Try first source
-    wget -O /usr/bin/udpgw https://raw.githubusercontent.com/Execc/udpgw/master/udpgw || {
+    wget -O /usr/bin/udpgw https://raw.githubusercontent.com/Execc/udpgw/main/udpgw-64 || {
         print_warn "Failed to download from first source, trying alternative..."
         # Try second source
         wget -O /usr/bin/udpgw https://raw.githubusercontent.com/Execc/udpgw/main/udpgw || {
             print_warn "Failed to download from second source, trying alternative..."
             # Try third source
-            wget -O /usr/bin/udpgw https://raw.githubusercontent.com/Execc/udpgw/master/udpgw-64 || {
-                print_error "Failed to download UDPGW from all sources"
-                exit 1
+            wget -O /usr/bin/udpgw https://raw.githubusercontent.com/Execc/udpgw/main/udpgw-arm64 || {
+                print_warn "Failed to download from third source, trying alternative..."
+                # Try fourth source
+                wget -O /usr/bin/udpgw https://raw.githubusercontent.com/Execc/udpgw/main/udpgw-arm || {
+                    print_error "Failed to download UDPGW from all sources"
+                    print_info "Trying to build UDPGW from source..."
+                    
+                    # Create temporary directory
+                    TEMP_DIR=$(mktemp -d)
+                    cd "$TEMP_DIR" || exit 1
+                    
+                    # Clone UDPGW repository
+                    git clone https://github.com/Execc/udpgw.git || { print_error "Failed to clone UDPGW repository"; exit 1; }
+                    cd udpgw || exit 1
+                    
+                    # Build UDPGW
+                    make || { print_error "Failed to build UDPGW"; exit 1; }
+                    
+                    # Copy binary
+                    cp udpgw /usr/bin/ || { print_error "Failed to copy UDPGW binary"; exit 1; }
+                    
+                    # Clean up
+                    cd - > /dev/null
+                    rm -rf "$TEMP_DIR"
+                }
             }
         }
     }
