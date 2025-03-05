@@ -128,6 +128,8 @@ install_packages() {
         python3-venv \
         python3-openssl \
         python3-cryptography \
+        libssl-dev \
+        libffi-dev \
         curl \
         wget \
         git \
@@ -137,35 +139,67 @@ install_packages() {
     # Install Python packages
     print_step "Installing Python dependencies..."
     
-    # First, upgrade pip and install wheel
-    pip3 install --upgrade pip wheel setuptools || { print_error "Failed to upgrade pip"; exit 1; }
+    # Create and activate virtual environment
+    print_info "Creating virtual environment..."
+    python3 -m venv /etc/boxvps/venv || { print_error "Failed to create virtual environment"; exit 1; }
+    source /etc/boxvps/venv/bin/activate || { print_error "Failed to activate virtual environment"; exit 1; }
     
-    # Install cryptography first
-    pip3 install cryptography==41.0.7 || { print_error "Failed to install cryptography"; exit 1; }
+    # Upgrade pip and install wheel
+    print_info "Upgrading pip and installing wheel..."
+    pip install --upgrade pip wheel setuptools || { print_error "Failed to upgrade pip"; exit 1; }
+    
+    # Install dependencies in specific order
+    print_info "Installing core dependencies..."
+    pip install pyOpenSSL==23.2.0 || { print_error "Failed to install pyOpenSSL"; exit 1; }
+    pip install cryptography==41.0.7 || { print_error "Failed to install cryptography"; exit 1; }
     
     # Install other dependencies
-    if [ -f "/etc/boxvps/requirements.txt" ]; then
-        # Remove cryptography from requirements if it exists
-        sed -i '/cryptography/d' /etc/boxvps/requirements.txt
-        pip3 install -r /etc/boxvps/requirements.txt || { print_error "Failed to install Python dependencies"; exit 1; }
-    else
-        print_warn "requirements.txt not found. Installing default dependencies..."
-        pip3 install \
-            fastapi==0.104.1 \
-            uvicorn==0.24.0 \
-            python-telegram-bot==20.7 \
-            python-dotenv==1.0.0 \
-            requests==2.31.0 \
-            pydantic==2.5.2 \
-            python-jose==3.3.0 \
-            passlib==1.7.4 \
-            python-multipart==0.0.6 \
-            aiohttp==3.9.1 \
-            asyncio==3.4.3 \
-            psutil==5.9.6 \
-            netifaces==0.11.0 \
-            python-iptables==1.0.0 || { print_error "Failed to install default Python dependencies"; exit 1; }
-    fi
+    print_info "Installing additional dependencies..."
+    pip install \
+        fastapi==0.104.1 \
+        uvicorn==0.24.0 \
+        python-telegram-bot==20.7 \
+        python-dotenv==1.0.0 \
+        requests==2.31.0 \
+        pydantic==2.5.2 \
+        python-jose==3.3.0 \
+        passlib==1.7.4 \
+        python-multipart==0.0.6 \
+        aiohttp==3.9.1 \
+        asyncio==3.4.3 \
+        psutil==5.9.6 \
+        netifaces==0.11.0 \
+        python-iptables==1.0.0 || { print_error "Failed to install additional dependencies"; exit 1; }
+    
+    # Deactivate virtual environment
+    deactivate
+    
+    # Update the systemd service to use the virtual environment
+    print_info "Updating systemd service..."
+    cat > /etc/systemd/system/boxvps.service << EOF
+[Unit]
+Description=BoxVPS Service
+After=network.target
+
+[Service]
+Type=simple
+Environment=PATH=/etc/boxvps/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ExecStart=/etc/boxvps/venv/bin/python /etc/boxvps/scripts/main.py
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
+EOF
+    
+    # Update the CLI tool to use the virtual environment
+    print_info "Updating CLI tool..."
+    cat > /usr/local/bin/boxvps << EOF
+#!/bin/bash
+source /etc/boxvps/venv/bin/activate
+python /etc/boxvps/scripts/cli.py "\$@"
+EOF
+    chmod +x /usr/local/bin/boxvps
 }
 
 # Install Xray
