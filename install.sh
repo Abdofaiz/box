@@ -214,46 +214,32 @@ install_udpgw() {
     if [ -f /usr/bin/udpgw ]; then
         rm /usr/bin/udpgw
     fi
-    
-    # Try multiple sources for UDPGW
-    print_info "Downloading UDPGW..."
-    
-    # Try first source
-    wget -O /usr/bin/udpgw https://raw.githubusercontent.com/Execc/udpgw/main/udpgw-64 || {
-        print_warn "Failed to download from first source, trying alternative..."
-        # Try second source
-        wget -O /usr/bin/udpgw https://raw.githubusercontent.com/Execc/udpgw/main/udpgw || {
-            print_warn "Failed to download from second source, trying alternative..."
-            # Try third source
-            wget -O /usr/bin/udpgw https://raw.githubusercontent.com/Execc/udpgw/main/udpgw-arm64 || {
-                print_warn "Failed to download from third source, trying alternative..."
-                # Try fourth source
-                wget -O /usr/bin/udpgw https://raw.githubusercontent.com/Execc/udpgw/main/udpgw-arm || {
-                    print_error "Failed to download UDPGW from all sources"
-                    print_info "Trying to build UDPGW from source..."
-                    
-                    # Create temporary directory
-                    TEMP_DIR=$(mktemp -d)
-                    cd "$TEMP_DIR" || exit 1
-                    
-                    # Clone UDPGW repository
-                    git clone https://github.com/Execc/udpgw.git || { print_error "Failed to clone UDPGW repository"; exit 1; }
-                    cd udpgw || exit 1
-                    
-                    # Build UDPGW
-                    make || { print_error "Failed to build UDPGW"; exit 1; }
-                    
-                    # Copy binary
-                    cp udpgw /usr/bin/ || { print_error "Failed to copy UDPGW binary"; exit 1; }
-                    
-                    # Clean up
-                    cd - > /dev/null
-                    rm -rf "$TEMP_DIR"
-                }
-            }
-        }
-    }
-    
+
+    print_info "Building UDPGW from source..."
+
+    # Install dependencies for building
+    apt install -y cmake || { print_error "Failed to install build dependencies"; exit 1; }
+
+    # Create temporary directory
+    TEMP_DIR=$(mktemp -d)
+    cd "$TEMP_DIR" || exit 1
+
+    # Clone UDPGW repository
+    git clone https://github.com/ambrop72/badvpn.git || { print_error "Failed to clone UDPGW repository"; exit 1; }
+    cd badvpn || exit 1
+
+    # Build UDPGW
+    mkdir build && cd build
+    cmake .. -DBUILD_NOTHING_BY_DEFAULT=1 -DBUILD_UDPGW=1 || { print_error "Failed to configure UDPGW build"; exit 1; }
+    make || { print_error "Failed to build UDPGW"; exit 1; }
+
+    # Copy binary
+    cp udpgw/badvpn-udpgw /usr/bin/udpgw || { print_error "Failed to copy UDPGW binary"; exit 1; }
+
+    # Clean up
+    cd - > /dev/null
+    rm -rf "$TEMP_DIR"
+
     chmod +x /usr/bin/udpgw
     print_info "UDPGW installed successfully"
 }
