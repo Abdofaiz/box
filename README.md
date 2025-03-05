@@ -41,7 +41,7 @@ A comprehensive management script for SSH and Xray services with advanced featur
 ## Installation
 
 ```bash
-wget -O install.sh https://raw.githubusercontent.com/box/blob/main/install.sh
+wget -O install.sh https://raw.githubusercontent.com/yourusername/boxvps/main/install.sh
 chmod +x install.sh
 ./install.sh
 ```
