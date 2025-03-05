@@ -1,0 +1,59 @@
+{
+    "telegram_bot_token": "",
+    "admin_ids": [],
+    "ssh_port": 443,
+    "xray_port": 443,
+    "domain": "",
+    "block_torrent": true,
+    "block_scanner": true,
+    "max_login_attempts": 3,
+    "services": {
+        "ssh": {
+            "enabled": true,
+            "protocols": ["openssh", "dropbear", "squid", "udpgw", "ws_http", "ws_https", "udp", "slowdns"],
+            "ovpn": {
+                "udp": true,
+                "tcp": true,
+                "ws_http": true
+            }
+        },
+        "l2tp": {
+            "enabled": true
+        },
+        "xray": {
+            "enabled": true,
+            "protocols": {
+                "vmess": {
+                    "ws": true,
+                    "grpc": true,
+                    "tcp_http": true
+                },
+                "vless": {
+                    "ws": true,
+                    "grpc": true,
+                    "xtls": true
+                },
+                "trojan": {
+                    "ws": true,
+                    "grpc": true,
+                    "tcp": true
+                }
+            }
+        }
+    },
+    "security": {
+        "auto_ban": true,
+        "ban_duration": 86400,
+        "max_connections": 100,
+        "rate_limit": {
+            "enabled": true,
+            "requests_per_minute": 60
+        }
+    },
+    "backup": {
+        "enabled": true,
+        "schedule": "0 0 * * *",
+        "retention_days": 7,
+        "telegram_chat_id": ""
+    }
+} 
