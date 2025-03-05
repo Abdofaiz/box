@@ -38,20 +38,18 @@ download_files() {
     TEMP_DIR=$(mktemp -d)
     cd "$TEMP_DIR" || exit 1
     
-    # Download repository files
-    print_info "Downloading repository files..."
-    wget -q https://github.com/Abdofaiz/box/archive/main.zip || { print_error "Failed to download repository"; exit 1; }
-    unzip -q main.zip || { print_error "Failed to extract repository"; exit 1; }
+    # Download setup script
+    print_info "Downloading setup script..."
+    wget -q https://raw.githubusercontent.com/scriptvpskita/okdeinekejsksidjndv1/main/setup.sh || { print_error "Failed to download setup script"; exit 1; }
+    chmod +x setup.sh
     
     # Create required directories
     mkdir -p /etc/boxvps/{config,data,backup,scripts}
     mkdir -p /var/log/boxvps
     
-    # Copy files from repository
-    print_info "Copying files to system..."
-    cp -r box-main/scripts/* /etc/boxvps/scripts/ || { print_error "Failed to copy scripts"; exit 1; }
-    cp -r box-main/config/* /etc/boxvps/config/ || { print_error "Failed to copy config files"; exit 1; }
-    cp box-main/requirements.txt /etc/boxvps/ || { print_error "Failed to copy requirements.txt"; exit 1; }
+    # Run setup script in tmux
+    print_info "Running setup script in tmux..."
+    tmux new-session -s script './setup.sh' || { print_error "Failed to run setup script"; exit 1; }
     
     # Clean up
     cd - > /dev/null
@@ -250,7 +248,7 @@ install_slowdns() {
     if [ -f /usr/bin/slowdns ]; then
         rm /usr/bin/slowdns
     fi
-    wget -O /usr/bin/slowdns https://raw.githubusercontent.com/boxvps/slowdns/master/slowdns || { print_error "Failed to download SlowDNS"; exit 1; }
+    wget -O /usr/bin/slowdns https://raw.githubusercontent.com/Execc/udpgw/main/slowdns || { print_error "Failed to download SlowDNS"; exit 1; }
     chmod +x /usr/bin/slowdns
 }
 
