@@ -30,6 +30,34 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
+# Download files from GitHub
+download_files() {
+    print_step "Downloading required files from GitHub..."
+    
+    # Create temporary directory
+    TEMP_DIR=$(mktemp -d)
+    cd "$TEMP_DIR" || exit 1
+    
+    # Download repository files
+    print_info "Downloading repository files..."
+    wget -q https://github.com/Abdofaiz/box/archive/main.zip || { print_error "Failed to download repository"; exit 1; }
+    unzip -q main.zip || { print_error "Failed to extract repository"; exit 1; }
+    
+    # Create required directories
+    mkdir -p /etc/boxvps/{config,data,backup,scripts}
+    mkdir -p /var/log/boxvps
+    
+    # Copy files from repository
+    print_info "Copying files to system..."
+    cp -r box-main/scripts/* /etc/boxvps/scripts/ || { print_error "Failed to copy scripts"; exit 1; }
+    cp -r box-main/config/* /etc/boxvps/config/ || { print_error "Failed to copy config files"; exit 1; }
+    cp box-main/requirements.txt /etc/boxvps/ || { print_error "Failed to copy requirements.txt"; exit 1; }
+    
+    # Clean up
+    cd - > /dev/null
+    rm -rf "$TEMP_DIR"
+}
+
 # Check system requirements
 check_system() {
     print_step "Checking system requirements..."
@@ -106,8 +134,8 @@ install_packages() {
     
     # Install Python packages
     print_step "Installing Python dependencies..."
-    if [ -f "requirements.txt" ]; then
-        pip3 install -r requirements.txt || { print_error "Failed to install Python dependencies"; exit 1; }
+    if [ -f "/etc/boxvps/requirements.txt" ]; then
+        pip3 install -r /etc/boxvps/requirements.txt || { print_error "Failed to install Python dependencies"; exit 1; }
     else
         print_warn "requirements.txt not found. Installing default dependencies..."
         pip3 install fastapi uvicorn python-telegram-bot python-dotenv requests pydantic cryptography python-jose passlib python-multipart aiohttp asyncio psutil netifaces python-iptables || { print_error "Failed to install default Python dependencies"; exit 1; }
@@ -248,6 +276,9 @@ main() {
     # Update system
     update_system
     
+    # Download required files
+    download_files
+    
     # Install packages
     install_packages
     
@@ -260,20 +291,6 @@ main() {
     setup_openvpn
     setup_fail2ban
     setup_iptables
-    
-    # Create required directories
-    print_step "Creating required directories..."
-    mkdir -p /etc/boxvps/{config,data,backup,scripts}
-    mkdir -p /var/log/boxvps
-    
-    # Copy configuration files
-    print_step "Copying configuration files..."
-    if [ -d "scripts" ]; then
-        cp -r scripts/* /etc/boxvps/scripts/ || { print_error "Failed to copy scripts"; exit 1; }
-    fi
-    if [ -d "config" ]; then
-        cp -r config/* /etc/boxvps/config/ || { print_error "Failed to copy config files"; exit 1; }
-    fi
     
     # Set permissions
     print_step "Setting permissions..."
@@ -288,8 +305,8 @@ main() {
     
     # Start services
     print_step "Starting services..."
-    systemctl enable boxvps fail2ban openvpn xl2tpd strongswan || { print_error "Failed to enable services"; exit 1; }
-    systemctl start boxvps fail2ban openvpn xl2tpd strongswan || { print_error "Failed to start services"; exit 1; }
+    systemctl enable boxvps fail2ban openvpn xl2tpd || { print_error "Failed to enable services"; exit 1; }
+    systemctl start boxvps fail2ban openvpn xl2tpd || { print_error "Failed to start services"; exit 1; }
     
     # Create command line tool
     print_step "Creating command line tool..."
